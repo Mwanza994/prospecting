@@ -1,1 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexible Offer Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 90%;
+            max-width: 500px;
+            z-index: 50;
+        }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+        th, td {
+            white-space: nowrap;
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        .status-new { background-color: #dbeafe; color: #1e40af; }
+        .status-contacted { background-color: #fee2e2; color: #991b1b; }
+        .status-call { background-color: #fef3c7; color: #92400e; }
+        .status-closedwon { background-color: #dcfce7; color: #166534; }
+        .status-closedlost { background-color: #e5e7eb; color: #374151; }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="mb-8 text-center">
+            <h1 id="mainTitle" class="text-3xl font-bold text-gray-900">Offer Tracker</h1>
+            <p class="text-gray-600 mt-2">A private sheet to track your local SME offers.</p>
+            <div id="userInfo" class="mt-4 text-xs text-gray-500"></div>
+        </header>
+
+        <!-- Offer Management Section -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div>
+                    <label for="offerSelector" class="block text-sm font-medium text-gray-700 mb-1">Select Offer Tracker</label>
+                    <select id="offerSelector" class="w-full p-2 border border-gray-300 rounded-md"></select>
+                </div>
+                 <div>
+                    <label for="newOfferName" class="block text-sm font-medium text-gray-700 mb-1">Create New Tracker</label>
+                    <div class="flex">
+                        <input type="text" id="newOfferName" placeholder="e.g., Website Design" class="flex-grow p-2 border border-gray-300 rounded-l-md">
+                        <button id="addOfferBtn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-r-md hover:bg-green-700 transition duration-300"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6">
+                 <button id="openModalBtn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-plus mr-2"></i> Add New Entry
+                </button>
+            </div>
+        </div>
+
+        <!-- Table to display tracker data -->
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="table-container">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Business Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone / WhatsApp</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Channel</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stage</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow-Up Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Received</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (K)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Due Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tracker-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Rows will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+             <div id="loadingState" class="text-center p-8 text-gray-500">Loading entries...</div>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing entries -->
+    <div id="entryModal" class="modal-backdrop">
+        <div class="modal">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6">Add New Entry</h2>
+            <form id="entryForm">
+                <input type="hidden" id="entryId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="date" id="date" class="p-2 border border-gray-300 rounded-md" required>
+                    <input type="text" id="businessName" placeholder="Business Name" class="p-2 border border-gray-300 rounded-md" required>
+                    <input type="text" id="contactName" placeholder="Contact Name" class="p-2 border border-gray-300 rounded-md">
+                    <input type="text" id="phone" placeholder="Phone / WhatsApp" class="p-2 border border-gray-300 rounded-md">
+                    <select id="channel" class="p-2 border border-gray-300 rounded-md">
+                        <option value="Voice Note">Voice Note</option>
+                        <option value="Call">Call</option>
+                    </select>
+                    <select id="stage" class="p-2 border border-gray-300 rounded-md">
+                        <option value="New">New</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Call">Call</option>
+                        <option value="Closed-Won">Closed-Won</option>
+                        <option value="Closed-Lost">Closed-Lost</option>
+                    </select>
+                    <input type="date" id="followUpDate" class="p-2 border border-gray-300 rounded-md">
+                    <select id="paymentReceived" class="p-2 border border-gray-300 rounded-md">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                    <input type="number" id="amount" placeholder="Amount (K)" class="p-2 border border-gray-300 rounded-md">
+                    <input type="date" id="deliveryDueDate" class="p-2 border border-gray-300 rounded-md">
+                    <textarea id="notes" placeholder="Notes" class="p-2 border border-gray-300 rounded-md md:col-span-2"></textarea>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" id="closeModalBtn" class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-300">Cancel</button>
+                    <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "your-fallback-api-key", authDomain: "your-fallback-auth-domain", projectId: "your-fallback-project-id" };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // --- Initialize Firebase ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        setLogLevel('debug');
+
+        // --- Global State ---
+        let userId = null;
+        let selectedOfferId = null;
+        let unsubscribeEntries = null; // To detach old listeners
+
+        // --- UI Elements ---
+        const mainTitle = document.getElementById('mainTitle');
+        const offerSelector = document.getElementById('offerSelector');
+        const newOfferNameInput = document.getElementById('newOfferName');
+        const addOfferBtn = document.getElementById('addOfferBtn');
+        const tableBody = document.getElementById('tracker-table-body');
+        const entryModal = document.getElementById('entryModal');
+        const openModalBtn = document.getElementById('openModalBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const entryForm = document.getElementById('entryForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const loadingState = document.getElementById('loadingState');
+
+        // --- Authentication ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                document.getElementById('userInfo').textContent = `Your Private User ID: ${userId}`;
+                listenForOffers();
+            } else {
+                document.getElementById('userInfo').textContent = 'Authenticating...';
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Error during sign-in:", error);
+                    document.getElementById('userInfo').textContent = 'Authentication failed. Please refresh.';
+                }
+            }
+        });
+        
+        // --- Offer Management ---
+        const listenForOffers = () => {
+            if (!userId) return;
+            const offersListCollection = collection(db, `artifacts/${appId}/users/${userId}/offers_list`);
+            onSnapshot(offersListCollection, (snapshot) => {
+                const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const currentSelectedValue = offerSelector.value;
+                offerSelector.innerHTML = '';
+
+                if (offers.length === 0) {
+                    // If no offers, create a default one
+                    const defaultOfferName = 'My First Tracker';
+                    const newOfferRef = doc(offersListCollection, defaultOfferName.replace(/\s+/g, '-').toLowerCase());
+                    setDoc(newOfferRef, { name: defaultOfferName });
+                    return; // The snapshot will re-trigger with the new offer
+                }
+
+                offers.forEach(offer => {
+                    const option = document.createElement('option');
+                    option.value = offer.id;
+                    option.textContent = offer.name;
+                    offerSelector.appendChild(option);
+                });
+
+                if (currentSelectedValue && offers.some(o => o.id === currentSelectedValue)) {
+                    offerSelector.value = currentSelectedValue;
+                }
+                
+                selectedOfferId = offerSelector.value;
+                listenForEntries();
+            });
+        };
+
+        addOfferBtn.addEventListener('click', async () => {
+            const newOfferName = newOfferNameInput.value.trim();
+            if (newOfferName && userId) {
+                const newOfferId = newOfferName.replace(/\s+/g, '-').toLowerCase();
+                const offersListCollection = collection(db, `artifacts/${appId}/users/${userId}/offers_list`);
+                const newOfferRef = doc(offersListCollection, newOfferId);
+                await setDoc(newOfferRef, { name: newOfferName });
+                newOfferNameInput.value = '';
+                offerSelector.value = newOfferId;
+                selectedOfferId = newOfferId;
+                listenForEntries();
+            }
+        });
+
+        offerSelector.addEventListener('change', () => {
+            selectedOfferId = offerSelector.value;
+            listenForEntries();
+        });
+
+
+        // --- Entry Management (depends on selected offer) ---
+        const listenForEntries = () => {
+            if (unsubscribeEntries) {
+                unsubscribeEntries(); // Detach previous listener
+            }
+            if (!userId || !selectedOfferId) {
+                tableBody.innerHTML = '';
+                loadingState.textContent = 'Please select or create a tracker.';
+                loadingState.style.display = 'block';
+                mainTitle.textContent = 'Offer Tracker';
+                return;
+            }
+
+            mainTitle.textContent = offerSelector.options[offerSelector.selectedIndex].text;
+            const entriesCollection = collection(db, `artifacts/${appId}/users/${userId}/offers/${selectedOfferId}/entries`);
+            
+            unsubscribeEntries = onSnapshot(entriesCollection, (snapshot) => {
+                const entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+                renderTable(entries);
+            }, (error) => {
+                console.error(`Error fetching entries for ${selectedOfferId}:`, error);
+                loadingState.textContent = 'Error loading data.';
+            });
+        };
+
+        // --- Render Table ---
+        const renderTable = (entries) => {
+            tableBody.innerHTML = '';
+            if (entries.length === 0) {
+                loadingState.textContent = 'No entries yet. Add one to get started!';
+                loadingState.style.display = 'block';
+            } else {
+                loadingState.style.display = 'none';
+                entries.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4">${entry.date || ''}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">${entry.businessName || ''}</td>
+                        <td class="px-6 py-4">${entry.contactName || ''}</td>
+                        <td class="px-6 py-4">${entry.phone || ''}</td>
+                        <td class="px-6 py-4">${entry.channel || ''}</td>
+                        <td class="px-6 py-4">${getStageBadge(entry.stage || 'New')}</td>
+                        <td class="px-6 py-4">${entry.followUpDate || ''}</td>
+                        <td class="px-6 py-4">${entry.paymentReceived || ''}</td>
+                        <td class="px-6 py-4">${entry.amount || ''}</td>
+                        <td class="px-6 py-4">${entry.deliveryDueDate || ''}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${entry.notes || ''}</td>
+                        <td class="px-6 py-4 text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-3 edit-btn" data-id="${entry.id}"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${entry.id}"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                    row.querySelector('.edit-btn').addEventListener('click', () => editEntry(entry));
+                    row.querySelector('.delete-btn').addEventListener('click', () => deleteEntry(entry.id));
+                });
+            }
+        };
+
+        const getStageBadge = (stage) => {
+            const stageClass = `status-${stage.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+            return `<span class="status-badge ${stageClass}">${stage}</span>`;
+        };
+
+        // --- Modal Logic ---
+        const openModal = () => entryModal.style.display = 'flex';
+        const closeModal = () => {
+            entryModal.style.display = 'none';
+            entryForm.reset();
+            document.getElementById('entryId').value = '';
+            modalTitle.textContent = 'Add New Entry';
+        };
+
+        openModalBtn.addEventListener('click', () => {
+            if (!selectedOfferId) {
+                alert("Please select or create a tracker first.");
+                return;
+            }
+            openModal();
+        });
+        closeModalBtn.addEventListener('click', closeModal);
+
+        // --- Form Submission (Create/Update) ---
+        entryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId || !selectedOfferId) {
+                alert("Authentication or offer selection issue. Please wait.");
+                return;
+            }
+            const id = document.getElementById('entryId').value;
+            const entryData = {
+                date: document.getElementById('date').value,
+                businessName: document.getElementById('businessName').value,
+                contactName: document.getElementById('contactName').value,
+                phone: document.getElementById('phone').value,
+                channel: document.getElementById('channel').value,
+                stage: document.getElementById('stage').value,
+                followUpDate: document.getElementById('followUpDate').value,
+                paymentReceived: document.getElementById('paymentReceived').value,
+                amount: document.getElementById('amount').value,
+                deliveryDueDate: document.getElementById('deliveryDueDate').value,
+                notes: document.getElementById('notes').value,
+            };
+
+            const entriesCollection = collection(db, `artifacts/${appId}/users/${userId}/offers/${selectedOfferId}/entries`);
+            try {
+                if (id) {
+                    const entryRef = doc(entriesCollection, id);
+                    await updateDoc(entryRef, entryData);
+                } else {
+                    await addDoc(entriesCollection, entryData);
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error saving entry:", error);
+                alert("Error saving entry.");
+            }
+        });
+
+        // --- Edit & Delete Entry ---
+        const editEntry = (entry) => {
+            modalTitle.textContent = 'Edit Entry';
+            document.getElementById('entryId').value = entry.id;
+            document.getElementById('date').value = entry.date;
+            document.getElementById('businessName').value = entry.businessName;
+            document.getElementById('contactName').value = entry.contactName;
+            document.getElementById('phone').value = entry.phone;
+            document.getElementById('channel').value = entry.channel;
+            document.getElementById('stage').value = entry.stage;
+            document.getElementById('followUpDate').value = entry.followUpDate;
+            document.getElementById('paymentReceived').value = entry.paymentReceived;
+            document.getElementById('amount').value = entry.amount;
+            document.getElementById('deliveryDueDate').value = entry.deliveryDueDate;
+            document.getElementById('notes').value = entry.notes;
+            openModal();
+        };
+
+        const deleteEntry = async (id) => {
+            if (!userId || !selectedOfferId) {
+                alert("Cannot delete: Authentication or offer selection issue.");
+                return;
+            }
+            if (confirm('Are you sure you want to delete this entry?')) {
+                try {
+                    const entryRef = doc(db, `artifacts/${appId}/users/${userId}/offers/${selectedOfferId}/entries`, id);
+                    await deleteDoc(entryRef);
+                } catch (error) {
+                    console.error("Error deleting entry:", error);
+                    alert("Error deleting entry.");
+                }
+            }
+        };
+    </script>
+</body>
+</html>
 
